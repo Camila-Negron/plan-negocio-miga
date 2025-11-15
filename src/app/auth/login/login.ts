@@ -1,71 +1,86 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { supabase } from '../../core/supabase.client';
 
 @Component({
-  standalone: true,
   selector: 'app-login',
+  standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './login.html', 
+  templateUrl: './login.html',
 })
 export class LoginComponent {
   form: FormGroup;
   msg = '';
-  loading = false;
+  modoLogin = false; // false = registrar, true = iniciar sesión
 
   constructor(private fb: FormBuilder, private router: Router) {
     this.form = this.fb.group({
+      nombre: ['', Validators.required],
+      apellido: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
-  }
-
-  get email() {
-    return this.form.get('email')!;
-  }
-
-  get password() {
-    return this.form.get('password')!;
-  }
-
-  async signupDirect() {
-    const { email, password } = this.form.value;
-    this.msg = '';
-    this.loading = true;
-
-    const { error: signUpErr } = await supabase.auth.signUp({ email, password });
-    if (signUpErr) {
-      this.msg = '❌ ' + signUpErr.message;
-      this.loading = false;
-      return;
-    }
-
-    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
-    if (signInErr) {
-      this.msg = '❌ ' + signInErr.message;
-      this.loading = false;
-      return;
-    }
-
-    this.loading = false;
-    this.router.navigateByUrl('/planes');
   }
 
   async onSubmit() {
     if (this.form.invalid) return;
 
-    const { email, password } = this.form.value;
-    this.msg = '';
-    this.loading = true;
+    const { nombre, apellido, email, password } = this.form.value;
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (this.modoLogin) {
+      // 🔐 Iniciar sesión
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      this.msg = '❌ ' + error.message;
-      this.loading = false;
+      if (error) {
+        this.msg = '❌ ' + error.message;
+        return;
+      }
+
+      this.router.navigateByUrl('/planes');
     } else {
+      // 🆕 Crear cuenta
+      const { error: signUpError, data } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (signUpError) {
+        this.msg = '❌ ' + signUpError.message;
+        return;
+      }
+
+      const userId = data.user?.id;
+      if (userId) {
+        // Guardar nombre y apellido en tabla profiles
+        const { error: insertError } = await supabase.from('profiles').insert([
+          {
+            id: userId,
+            nombre,
+            apellido,
+          },
+        ]);
+
+        if (insertError) {
+          this.msg = '⚠️ Cuenta creada, pero falló guardar el perfil';
+        }
+      }
+
+      // Iniciar sesión automáticamente luego de registrarse
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (loginError) {
+        this.msg = 'Cuenta creada pero error al iniciar sesión';
+        return;
+      }
+
       this.router.navigateByUrl('/planes');
     }
   }
