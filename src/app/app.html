@@ -1,5 +1,2 @@
-<header *ngIf="nombreCompleto()">
-  <p>Bienvenido/a, {{ nombreCompleto() }}</p>
-</header>
-
+<app-navbar *ngIf="mostrarNavbar && nombreCompletoValor"></app-navbar>
 <router-outlet></router-outlet>
