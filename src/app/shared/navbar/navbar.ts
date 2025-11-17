@@ -13,9 +13,11 @@ export class NavbarComponent implements OnInit {
   router = inject(Router);
   cd = inject(ChangeDetectorRef);
   userName = '...';
+  currentPlanId: string | null = null;
 
   async ngOnInit() {
     try {
+      // Obtener datos del usuario
       const { data: userData, error: userError } = await supabase.auth.getUser();
       console.log('👤 Usuario:', userData);
       if (userError) console.error('❌ Error al obtener usuario:', userError);
@@ -35,9 +37,14 @@ export class NavbarComponent implements OnInit {
 
         if (profile) {
           this.userName = `${profile.nombre} ${profile.apellido}`;
-          this.cd.detectChanges(); // 🔄 Fuerza actualización del HTML
+          this.currentPlanId = localStorage.getItem('currentPlanId');
+      this.cd.detectChanges();
         }
       }
+
+      // Obtener planId actual del localStorage
+       // 🔄 Forzar actualización de vista
+
     } catch (err) {
       console.error('🚨 Error inesperado en navbar:', err);
     }
@@ -45,6 +52,7 @@ export class NavbarComponent implements OnInit {
 
   async logout() {
     await supabase.auth.signOut();
+    localStorage.clear();
     this.router.navigateByUrl('/login');
   }
 }

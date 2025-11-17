@@ -42,6 +42,8 @@ export class MateriaPrimaComponent implements OnInit {
         this.planId = data;
       }
 
+      localStorage.setItem('currentPlanId', this.planId!);
+
       await this.loadSection();
       if (this.ingredientes.length === 0) {
         this.addIngrediente();
@@ -167,7 +169,7 @@ export class MateriaPrimaComponent implements OnInit {
   async onSubmit() {
     if (!this.planId || this.form.invalid) return;
 
-    const { error } = await supabase
+    const { error: sectionError } = await supabase
       .from('sections')
       .upsert(
         {
@@ -183,6 +185,26 @@ export class MateriaPrimaComponent implements OnInit {
         { onConflict: 'plan_id,tipo' }
       );
 
-    this.msg = error ? '❌ Error al guardar' : '✅ Costos guardados';
+    if (sectionError) {
+      this.msg = '❌ Error al guardar';
+      return;
+    }
+
+    this.msg = '✅ Costos guardados con éxito';
+
+
+    // 👇 Actualizamos la sección actual
+    const { error } = await supabase
+      .from('plans')
+      .update({ ultima_seccion: 'costos' })
+      .eq('id', this.planId);
+
+    if (!error) {
+      await supabase.from('plans').update({ ultima_seccion: 'costos' }).eq('id', this.planId);
+    }
+      else {
+      this.msg = '✅ Costos guardados';
+    }
   }
+
 }

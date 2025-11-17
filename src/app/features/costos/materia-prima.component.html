@@ -90,7 +90,15 @@
   </div>
 
   <br />
+
+  <p *ngIf="msg" [ngClass]="{
+    'text-green-600': msg.includes('✅'),
+    'text-red-600': msg.includes('❌')
+  }" class="text-sm mt-2">
+    {{ msg }}
+  </p>
+
   <button type="submit" [disabled]="form.invalid">💾 Guardar Materia Prima</button>
 
-  <p *ngIf="msg">{{ msg }}</p>
+  
 </form>

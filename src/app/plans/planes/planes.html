@@ -1,10 +1,23 @@
 <h2>Mis Planes de Negocio</h2>
 
-<button (click)="crearNuevoPlan()">+ Nuevo Plan</button>
+<div *ngIf="cargando">Cargando planes...</div>
 
-<ul>
-  <li *ngFor="let plan of planes">
-    <strong>{{ plan.estado }}</strong> — creado {{ plan.created_at | date: 'shortDate' }}
-    <button (click)="abrir(plan.id)">Abrir</button>
-  </li>
-</ul>
+<div *ngIf="!cargando">
+  <button (click)="crearNuevoPlan()" class="mb-4 bg-blue-600 text-white px-4 py-2 rounded">Crear nuevo plan</button>
+
+  <ul class="space-y-4">
+    <li *ngFor="let plan of planes" class="border p-4 rounded shadow">
+      <p class="font-semibold">Plan ID: {{ plan.id }}</p>
+      <p class="text-gray-600">Creado: {{ plan.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
+
+      <button (click)="abrir(plan.id)" class="mt-2 bg-green-600 text-white px-3 py-1 rounded">
+        Abrir plan
+      </button>
+
+      <button (click)="eliminar(plan.id)" class="mt-2 ml-2 bg-red-600 text-white px-3 py-1 rounded">
+        🗑 Eliminar
+      </button>
+    </li>
+  </ul>
+</div>
+

@@ -33,6 +33,7 @@
     "@angular/ssr": "^20.2.0",
     "@supabase/supabase-js": "^2.56.1",
     "express": "^5.1.0",
+    "jspdf": "^3.0.3",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

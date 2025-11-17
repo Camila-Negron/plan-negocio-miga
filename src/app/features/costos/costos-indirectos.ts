@@ -74,6 +74,8 @@ export class CostosIndirectosComponent implements OnInit {
         this.planId = data;
       }
 
+      localStorage.setItem('currentPlanId', this.planId!);
+
       this.cdr.detectChanges();
 
       await this.loadSection();
@@ -143,9 +145,9 @@ export class CostosIndirectosComponent implements OnInit {
   }
 
   async onSubmit() {
-    if (!this.planId || this.form.invalid) return;
+        if (!this.planId || this.form.invalid) return;
 
-    const { error } = await supabase.from('sections').upsert(
+    const { error: sectionError } = await supabase.from('sections').upsert(
       {
         plan_id: this.planId,
         tipo: 'costos-indirectos',
@@ -158,11 +160,31 @@ export class CostosIndirectosComponent implements OnInit {
       { onConflict: 'plan_id,tipo' }
     );
 
-    if (error) {
+    if (sectionError) {
       this.msg = '❌ Error al guardar';
-    } else {
-      this.msg = '✅ Costos indirectos guardados';
-      this.router.navigate(['/costos/resumen'], { queryParams: { planId: this.planId } });
+      return;
     }
+
+    // 👉 ACTUALIZA ultima_seccion ANTES DE NAVEGAR
+    const { error: planError } = await supabase
+      .from('plans')
+      .update({ ultima_seccion: 'costos-indirectos' })
+      .eq('id', this.planId);
+
+    if (planError) {
+      this.msg = '❌ Error al guardar sección final';
+      return;
+    }
+
+    this.msg = '✅ Costos indirectos guardados';
+
+    // Espera 500ms antes de navegar para asegurar que la base de datos haya terminado
+    setTimeout(() => {
+      this.router.navigate(['/costos/resumen'], {
+        queryParams: { planId: this.planId },
+      });
+    }, 500);
+
   }
+
 }

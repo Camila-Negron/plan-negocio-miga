@@ -3,8 +3,12 @@
     <li><a routerLink="/idea">Idea</a></li>
     <li><a routerLink="/objetivo">Objetivo</a></li>
     <li><a routerLink="/costos">Costos</a></li>
-    <li><a> Pon en marcha </a></li>
-  </ul>
+    <li><a routerLink="/pon-en-marcha">Pon en marcha</a></li>
+    <li *ngIf="currentPlanId">
+        <a [routerLink]="['/generar-pdf']" [queryParams]="{ planId: currentPlanId }">📄 Generar PDF</a>
+    </li>>
+
+</ul>
 
   <div style="margin-top: 10px;">
     <p *ngIf="userName">👤 {{ userName }}</p>

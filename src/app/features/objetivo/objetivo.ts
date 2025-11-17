@@ -46,6 +46,8 @@ export class ObjetivoComponent implements OnInit {
         this.planId = data;
       }
 
+      localStorage.getItem('currentPlanId');
+
       this.loadSection();
     });
   }
@@ -66,7 +68,7 @@ export class ObjetivoComponent implements OnInit {
   async onSubmit() {
     if (!this.planId || this.form.invalid) return;
 
-    const { error } = await supabase
+    const { error: sectionError } = await supabase
       .from('sections')
       .upsert({
         plan_id: this.planId,
@@ -76,17 +78,29 @@ export class ObjetivoComponent implements OnInit {
         updated_at: new Date().toISOString(),
       }, { onConflict: 'plan_id,tipo' });
 
-    if (error) {
-      this.msg = `❌ ${error.message}`;
+    if (sectionError) {
+      this.msg = `❌ ${sectionError.message}`;
       this.saved = false;
-    } else {
-      this.msg = '✅ Objetivos guardados';
-      this.saved = true;
-      this.router.navigate(['/costos/materia-prima'], {
-        queryParams: { planId: this.planId }
-      });
-
+      return;
     }
+
+    // 👇 Actualizar campo ultima_seccion del plan
+    const { error } = await supabase
+      .from('plans')
+      .update({ ultima_seccion: 'objetivos' })
+      .eq('id', this.planId);
+
+    if (!error) {
+      await supabase.from('plans').update({ ultima_seccion: 'objetivo' }).eq('id', this.planId);
+    }
+
+    this.msg = '✅ Objetivos guardados';
+    this.saved = true;
+
+    this.router.navigate(['/costos/materia-prima'], {
+      queryParams: { planId: this.planId }
+    });
   }
+
 
 }

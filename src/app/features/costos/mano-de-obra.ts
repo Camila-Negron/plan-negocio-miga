@@ -44,6 +44,8 @@ export class ManoDeObraComponent implements OnInit {
         this.planId = data;
       }
 
+      localStorage.setItem('currentPlanId', this.planId!);
+
       await this.loadSection();
     });
 
@@ -93,11 +95,24 @@ export class ManoDeObraComponent implements OnInit {
         { onConflict: 'plan_id,tipo' }
       );
 
-    if (error) {
-      this.msg = '❌ Error al guardar';
+    if (!error) {
+      await supabase.from('plans').update({ ultima_seccion: 'mano-obra' }).eq('id', this.planId);
+    }
+
+    // ✅ Actualiza el campo `ultima_seccion`
+    const { error: updateError } = await supabase
+      .from('plans')
+      .update({ ultima_seccion: 'mano-obra' })
+      .eq('id', this.planId);
+
+    if (updateError) {
+      this.msg = 'Guardado pero no se pudo actualizar la sección';
     } else {
       this.msg = '✅ Mano de obra guardada';
-      this.router.navigate(['/costos/costos-indirectos'], { queryParams: { planId: this.planId } });
+      this.router.navigate(['/costos/costos-indirectos'], {
+        queryParams: { planId: this.planId },
+      });
     }
   }
+
 }

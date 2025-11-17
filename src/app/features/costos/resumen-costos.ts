@@ -23,22 +23,34 @@ export class ResumenCostosComponent implements OnInit {
   cu = 0;
 
   msg = '';
+  loading = true;
 
   private route = inject(ActivatedRoute);
 
-  async ngOnInit() {
+  ngOnInit() {
     this.route.queryParams.subscribe(async (params) => {
-      this.planId = params['planId'] || null;
+      this.planId = params['planId'] || localStorage.getItem('currentPlanId');
+
       if (!this.planId) {
         this.msg = '❌ Plan no encontrado';
+        this.loading = false;
         return;
       }
 
       try {
         await this.cargarDatos();
-        this.calcularResumen();
+
+        if (this.totalMP === 0 && this.totalMO === 0 && this.totalCI === 0) {
+          this.msg = 'ℹ️ Aún no se han registrado costos suficientes.';
+        } else {
+          this.calcularResumen();
+          this.msg = '';
+        }
+
       } catch (err) {
         this.msg = '❌ Error al obtener los datos';
+      } finally {
+        this.loading = false;
       }
     });
   }

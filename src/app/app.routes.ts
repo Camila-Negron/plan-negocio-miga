@@ -72,4 +72,9 @@ export const routes: Routes = [
     path: '**',
     redirectTo: 'planes',
   },
+  {
+  path: 'generar-pdf',
+  loadComponent: () => import('./features/generar-pdf/generar-pdf').then(m => m.GenerarPdfComponent)
+},
+
 ];
